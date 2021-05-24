@@ -1,5 +1,7 @@
-# Survival Game
+# Unity-chan Escape
 Unity Minigame based on Survival genre
+
+![Unity Game](https://github.com/isa-fernandes/survival-game/blob/main/screenshot-cut.png)
 
 # Access
 You can play at https://play.unity.com/mg/other/build-dag
@@ -15,6 +17,7 @@ You can play at https://play.unity.com/mg/other/build-dag
 
 # Gameplay Video
 V1: https://youtu.be/2MouItcEKG0
+
 V2: https://youtu.be/skFHxEuPcrI
 
 
