@@ -5,42 +5,51 @@ using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] GameObject gameManager;
     [SerializeField] GameObject particle;
-    [SerializeField] TextMeshProUGUI lifesText;
+    [SerializeField] GameObject particleAttackAll;
+    [SerializeField] GameObject gameOverPanel;
+    [SerializeField] GameObject lifeBar;
+    [SerializeField] TextMeshProUGUI gameOverText;
     [SerializeField] TextMeshProUGUI instructionsText;
     [SerializeField] float horizontalInput;
     [SerializeField] float verticalInput;
     [SerializeField] float speed = 1;
-    [SerializeField] float rotationSpeed = 150;
+    [SerializeField] float rotationSpeed = 100;
     [SerializeField] float jumpSpeed = 10;
+    [SerializeField] float maxLifeScaleX = 4;
+
+    public bool isAlive = true;
 
     // Private variables
+    GameManager gameManagerScript;
     Animator playerAnimator;
     Rigidbody playerRb;
     Vector3 initialPosition;
     Quaternion initialRotation;
     bool isOnGround = true;
     bool isSliding;
-    bool isAlive = true;
-    int lifes = 3;
     bool hasKey;
+    bool isCharging = false;
+    float currentLife = 100;
 
     // Start is called before the first frame update
     void Start()
     {
+        lifeBar.transform.localScale = new Vector3(maxLifeScaleX, 1.5f, 1f);
         initialPosition = transform.position;
         initialRotation = transform.rotation;
         playerAnimator = GetComponent<Animator>();
         playerRb = GetComponent<Rigidbody>();
+        gameManagerScript = gameManager.GetComponent<GameManager>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (isAlive)
+        if (isAlive && !isCharging)
         {
             horizontalInput = Input.GetAxis("Horizontal");
-            transform.Translate(Vector3.right * horizontalInput * speed * Time.deltaTime);
             transform.Rotate(Vector3.up * horizontalInput * rotationSpeed * Time.deltaTime);
 
             verticalInput = Input.GetAxis("Vertical");
@@ -59,6 +68,11 @@ public class PlayerController : MonoBehaviour
                 StartCoroutine(Attack());
             }
 
+            if (Input.GetKeyDown(KeyCode.M) && gameManagerScript.GetTime() < 30)
+            {
+                StartCoroutine(AttackAll());
+            }
+
         }
         
 
@@ -68,12 +82,12 @@ public class PlayerController : MonoBehaviour
     {
         if (isReset)
         {
-            lifes = 3;
-        } else if (lifes > 0)
+            currentLife = 100;
+        } else if (currentLife-20 >= 0)
         {
-            lifes--;
+            currentLife -= 20;
         }
-        lifesText.text = lifes.ToString();
+        lifeBar.transform.localScale = new Vector3((currentLife*maxLifeScaleX) / 100, 1.5f, 1f);
     }
 
     void ResetGame ()
@@ -96,21 +110,14 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Weapon"))
+        if (other.gameObject.CompareTag("Weapon") && !isCharging)
         {
             StartCoroutine(Hurt());
         }
 
         if (other.gameObject.CompareTag("WinPlatform"))
         {
-            isAlive = false;
-            instructionsText.text = "WIN!";
-            playerAnimator.SetTrigger("Win");
-            GameObject[] gameObjects = GameObject.FindGameObjectsWithTag("Enemy");
-            foreach (GameObject gameObject in gameObjects)
-            {
-                Destroy(gameObject);
-            }
+            StartCoroutine(Win());
         }
 
         if (other.gameObject.CompareTag("Key"))
@@ -140,11 +147,25 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    IEnumerator Win ()
+    {
+        isAlive = false;
+        playerAnimator.SetTrigger("Win");
+        GameObject[] gameObjects = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject gameObject in gameObjects)
+        {
+            Destroy(gameObject);
+        }
+        yield return new WaitForSeconds(5);
+        gameOverPanel.SetActive(true);
+        gameOverText.SetText("VICTORY!");
+    }
+
     IEnumerator Hurt ()
     {
         UpdateLife();
         
-        if (lifes == 0)
+        if (currentLife == 0)
         {
             isAlive = false;
             playerAnimator.SetBool("Dead", true);
@@ -168,5 +189,27 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(1.2f);
         particle.SetActive(false);
         isSliding = false;
+    }
+
+    IEnumerator AttackAll ()
+    {
+        isCharging = true;
+        particleAttackAll.SetActive(true);
+        playerAnimator.SetTrigger("AttackAll");
+        yield return new WaitForSeconds(3);
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject enemy in enemies)
+        {
+            StartCoroutine(enemy.GetComponent<EnemyController>().Die());
+        }
+        gameManagerScript.SetTime(gameManagerScript.GetTime()/2);
+        particleAttackAll.SetActive(false);
+        isCharging = false;
+    }
+
+    public void Loose ()
+    {
+        playerAnimator.SetTrigger("Loose");
+        isAlive = false;
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -8,13 +9,17 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject enemyCorners;
     [SerializeField] GameObject key;
     [SerializeField] GameObject keyCorners;
+    [SerializeField] GameObject gameOverPanel;
+    [SerializeField] TextMeshProUGUI timerText;
     [SerializeField] int enemiesAtStart = 3;
+    [SerializeField] float timer = 90f;
 
     // Private variables
     List<Transform> enemyCornerSpots;
     List<Transform> keyCornerSpots;
+    PlayerController playerController;
     int enemyCount;
-    float spawnRate = 20;
+    float spawnRate = 10;
 
     // Start is called before the first frame update
     void Start()
@@ -41,11 +46,17 @@ public class GameManager : MonoBehaviour
         keyCornerSpots.RemoveAt(0);
 
         SpawnKey();
+
+        playerController = GameObject.Find("Player").GetComponent<PlayerController>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (playerController.isAlive)
+        {
+            SetTime(Time.deltaTime);
+        }
         
     }
 
@@ -101,9 +112,45 @@ public class GameManager : MonoBehaviour
 
         if (spawnRate > 5)
         {
-            spawnRate -= 2;
+            spawnRate -= 5;
         }
 
         StartCoroutine(enemyCoroutine());
+    }
+
+    IEnumerator GameOver ()
+    {
+        playerController.Loose();
+        yield return new WaitForSeconds(4);
+        Time.timeScale = 0f;
+        gameOverPanel.SetActive(true);
+    }
+
+    public void SetTime (float subtract)
+    {
+        if (timer - subtract > 0)
+        {
+            timer -= subtract;
+            
+        } else
+        {
+            timer = 0;
+        }
+
+        timerText.SetText(Mathf.RoundToInt(timer).ToString());
+
+        if (timer < 30)
+        {
+            timerText.color = Color.red;
+        }
+        if (Mathf.RoundToInt(timer) <= 0)
+        {
+            StartCoroutine(GameOver());
+        }
+    }
+
+    public float GetTime ()
+    {
+        return timer;
     }
 }

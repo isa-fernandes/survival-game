@@ -36,6 +36,7 @@ public class EnemyController : MonoBehaviour
             if (distance >= minDistance && distance < maxDistance)
             {
                 transform.Translate(Vector3.forward * speed * Time.deltaTime);
+                transform.position = new Vector3(transform.position.x, 0, transform.position.z);
                 speed += 0.1f * Time.deltaTime;
             }
             else
