@@ -14,7 +14,8 @@ You can play at https://play.unity.com/mg/other/build-dag
 **Tip:** The game gets more difficult over time, enemies appear faster and faster, if it is too difficult reload the page.
 
 # Gameplay Video
-https://youtu.be/2MouItcEKG0
+V1: https://youtu.be/2MouItcEKG0
+V2: https://youtu.be/skFHxEuPcrI
 
 
 
